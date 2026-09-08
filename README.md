@@ -1,2 +1,63 @@
-# twice-as-fast--one-dataset-three-tools
-End-to-end data analyst project on 99K+ Brazilian e-commerce orders — PostgreSQL ELT, Python EDA &amp; late-delivery prediction, Excel dashboard. Built on the Olist public dataset.
+# Olist E-Commerce Analysis
+
+End-to-end data analyst portfolio project on the [Olist Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) (Kaggle) — from raw multi-table CSVs to a cleaned relational database, exploratory analysis, a late-delivery prediction model, and an interactive Excel dashboard.
+
+## Dataset
+
+~99,000 orders placed on the Olist marketplace between September 2016 and August 2018, spread across 9 relational tables (orders, order items, payments, reviews, products, sellers, customers, product category translation, geolocation).
+
+## Tech stack
+
+- **PostgreSQL** (hosted on [Neon](https://neon.tech)) — data cleaning and analysis in SQL
+- **Python** (pandas, matplotlib, seaborn, scikit-learn) — exploratory analysis and a classification model, in Jupyter notebooks
+- **Excel** (formulas, PivotChart-style visuals, dropdown filters) — interactive dashboard
+
+## Project structure
+├── data/
+│ ├── raw/ # original CSVs, straight from Kaggle
+│ └── cleaned/ # cleaned tables exported from PostgreSQL
+├── sql/
+│ ├── 01_create_staging_tables.sql
+│ ├── 02_load_staging_data.sql
+│ ├── 03_create_cleaned_tables.sql
+│ ├── 04_transform_and_load_cleaned.sql
+│ └── 05_analysis_queries.sql
+├── notebooks/
+│ ├── 01_exploratory_data_analysis.ipynb
+│ └── 02_late_delivery_prediction.ipynb
+├── dashboard/
+│ ├── olist_sales_dashboard.xlsx
+│ └── dashboard_screenshot.png
+└── README.md
+
+*(match the `sql/` file names above to your actual file names when uploading.)*
+
+## Phase 1 — Database (PostgreSQL)
+
+Followed an ELT pattern: all 9 raw tables were loaded into **staging tables** with `TEXT` columns exactly as provided, then transformed into **cleaned tables** with proper data types, `NOT NULL`/`CHECK` constraints, and primary/foreign keys. The `sql/` folder also includes a set of analysis queries covering joins, subqueries, `HAVING`, CTEs, and a window function (month-over-month revenue growth with `LAG`).
+
+## Phase 2 — Python analysis
+
+**`01_exploratory_data_analysis.ipynb`** covers order volume and revenue trends, top product categories, payment behavior, delivery time by state, and the relationship between delivery speed and review scores.
+
+**`02_late_delivery_prediction.ipynb`** builds a binary classifier (Logistic Regression baseline + Random Forest) that predicts whether an order will arrive after its estimated delivery date, using only information available at the time of purchase (order value, freight, product/seller attributes, payment method, purchase timing) — never the actual delivery date itself, to avoid leakage.
+
+### Key findings
+
+- Total revenue: **R$ 16.0M** across **99,420 orders** (Sep 2016 – Aug 2018)
+- Average delivery time: **12.6 days**, with **91.9%** of orders arriving on or before the estimated date
+- Average review score: **4.09 / 5** — and delivery speed is one of the strongest drivers of review score
+- Delivery speed varies sharply by state: **São Paulo** averages **8.8 days**, more than **twice as fast** as **Bahia** at **19.3 days**
+- `bed_bath_table` is the best-selling category (11,115 items), followed by `health_beauty` and `sports_leisure`
+- **8.1%** of delivered orders arrive late; a Random Forest model predicts this with **ROC-AUC 0.74**, with purchase month, the estimated delivery window, and customer state among the strongest predictors
+
+## Phase 3 — Dashboard (Excel)
+
+`dashboard/olist_sales_dashboard.xlsx` — an interactive dashboard with 5 KPI cards, 6 charts (monthly trend, payment methods, top categories, delivery time by state, order status, review distribution), a sortable state-performance table, and two working filters (a trend-metric switch and a year filter), all driven by formulas rather than hardcoded values.
+
+## Reproducing this project
+
+1. Create a PostgreSQL database (e.g. on [Neon](https://neon.tech)) and run the scripts in `sql/` in order.
+2. Export the cleaned tables as CSVs into `data/cleaned/`.
+3. Open the notebooks in Jupyter or Kaggle and update the data path to point at `data/cleaned/`.
+4. Open `dashboard/olist_sales_dashboard.xlsx` in Excel.
